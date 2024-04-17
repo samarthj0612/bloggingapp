@@ -16,10 +16,20 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(ResourceNotFound.class)
     public ResponseEntity<ApiResponse> resourceNotFoundExceptionHandler(ResourceNotFound e) {
-        String message = "Mandatory params missing";
+        String message = "Resource not found";
         String error = e.getMessage();
         ApiResponse apiResponse = new ApiResponse(message, false, error, HttpStatus.NOT_FOUND);
+
         return new ResponseEntity<ApiResponse>(apiResponse, HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(NumberFormatException.class)
+    public ResponseEntity<ApiResponse> numberFormatExceptionHandler(NumberFormatException e) {
+        String message = "Number format exception";
+        String error = e.getMessage();
+        ApiResponse apiResponse = new ApiResponse(message, false, error, HttpStatus.INTERNAL_SERVER_ERROR);
+
+        return new ResponseEntity<ApiResponse>(apiResponse, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
