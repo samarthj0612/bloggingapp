@@ -7,7 +7,6 @@ import com.samdb.bloggingapp.repositories.UserRepo;
 import com.samdb.bloggingapp.services.UserService;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.context.config.ConfigDataResourceNotFoundException;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -24,9 +23,12 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserDto createUser(UserDto userDto) {
-        User user = this.dtoToUser(userDto);
+        User user = this.userDtoToUser(userDto);
         User savedUser = this.userRepo.save(user);
-        return this.userToUserDto(savedUser);
+        UserDto savedUserDto;
+        savedUserDto = this.userToUserDto(savedUser);
+
+        return savedUserDto;
     }
 
     @Override
@@ -39,7 +41,8 @@ public class UserServiceImpl implements UserService {
         user.setAbout(userDto.getAbout());
 
         User updatedUser = this.userRepo.save(user);
-        UserDto updatedUserDto = this.userToUserDto(updatedUser);
+        UserDto updatedUserDto;
+        updatedUserDto = this.userToUserDto(updatedUser);
 
         return updatedUserDto;
     }
@@ -64,10 +67,13 @@ public class UserServiceImpl implements UserService {
     public UserDto deleteUser(Integer userId) {
         User user = this.userRepo.findById(userId).orElseThrow(() -> new ResourceNotFound("User", "Id", userId));
         this.userRepo.delete(user);
-        return this.userToUserDto(user);
+        UserDto userDto;
+        userDto = this.userToUserDto(user);
+
+        return userDto;
     }
 
-    private User dtoToUser(UserDto userDto) {
+    private User userDtoToUser(UserDto userDto) {
         // User user = new User();
         // user.setId(userDto.getId());
         // user.setName(userDto.getName());
@@ -75,7 +81,8 @@ public class UserServiceImpl implements UserService {
         // user.setAbout(userDto.getAbout());
         // user.setPassword(userDto.getPassword());
 
-        User user = this.modelMapper.map(userDto, User.class);
+        User user;
+        user = this.modelMapper.map(userDto, User.class);
 
         return user;
     }
@@ -88,7 +95,8 @@ public class UserServiceImpl implements UserService {
         // userDto.setPassword(user.getPassword());
         // userDto.setAbout(user.getAbout());
 
-        UserDto userDto = this.modelMapper.map(user, UserDto.class);
+        UserDto userDto;
+        userDto = this.modelMapper.map(user, UserDto.class);
 
         return userDto;
     }
