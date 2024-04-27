@@ -1,15 +1,23 @@
 package com.samdb.bloggingapp.controllers;
 
 import com.samdb.bloggingapp.configs.Constants;
+import com.samdb.bloggingapp.payloads.FileResponse;
 import com.samdb.bloggingapp.payloads.MultiplePosts;
 import com.samdb.bloggingapp.payloads.PostDto;
 import com.samdb.bloggingapp.payloads.PostResponse;
+import com.samdb.bloggingapp.services.FileService;
 import com.samdb.bloggingapp.services.PostService;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.StreamUtils;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.InputStream;
 import java.util.List;
 
 @RestController
@@ -17,6 +25,12 @@ import java.util.List;
 public class PostController {
     @Autowired
     private PostService postService;
+
+    @Autowired
+    private FileService fileService;
+
+    @Value("${project.image}")
+    private String path;
 
     @GetMapping("/all")
     public ResponseEntity<List<PostDto>> getAllPosts() {
@@ -106,4 +120,38 @@ public class PostController {
         PostDto deletedPostDto = this.postService.deletePost(postId);
         return new ResponseEntity<>(deletedPostDto, HttpStatus.OK);
     }
+
+    @PostMapping("/image/upload/{postId}")
+    public ResponseEntity<FileResponse> uploadImage(@RequestParam("image") MultipartFile multipartFile, @PathVariable("postId") String id) {
+        Integer postId = Integer.parseInt(id);
+        PostDto postDto = this.postService.getPost(postId);
+
+        String filename = null;
+        try {
+            filename = this.fileService.uploadResources(path, multipartFile);
+        } catch (Exception e) {
+            e.printStackTrace();
+            FileResponse fileResponse = new FileResponse(null, "Failed to upload File");
+            return new ResponseEntity<>(fileResponse, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+
+        postDto.setPostImageName(filename);
+        PostDto updatedPostDto = this.postService.updatePost(postDto, postId);
+
+        FileResponse fileResponse = new FileResponse(filename, "File Successfully uploaded");
+        return new ResponseEntity<>(fileResponse, HttpStatus.OK);
+    }
+
+    @GetMapping(value = "/image/fetch/{imageName}", produces = MediaType.IMAGE_JPEG_VALUE)
+    public void fetchImage(@PathVariable String imageName, HttpServletResponse response) {
+        try {
+            InputStream resource = this.fileService.fetchResources(path, imageName);
+            response.setContentType(MediaType.IMAGE_JPEG_VALUE);
+            StreamUtils.copy(resource, response.getOutputStream());
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.out.println(e.getMessage());
+        }
+    }
+
 }
