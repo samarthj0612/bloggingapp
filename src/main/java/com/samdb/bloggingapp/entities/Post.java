@@ -7,6 +7,8 @@ import lombok.Setter;
 import lombok.ToString;
 
 import java.util.Date;
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 @Getter
@@ -37,4 +39,7 @@ public class Post {
     @ManyToOne
     // @JoinColumn(name = "category_id")
     private Category category;
+
+    @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private Set<Comment> comments = new HashSet<>();
 }
